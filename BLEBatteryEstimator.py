@@ -30,15 +30,19 @@ class BLEDevice:
     devsleepCurrent = 0.8E-3
     sleepCurrent = 1.3E-6
     AdvInterval = 4
-    totalActiveTime = devwkupTime + (standbyTime) + (idleTime) + (tx_1Time) + (t_ifsTime) + (rx_1Time) + (standby_idleTime) + (tx_2Time) + (t_ifsTime) + (rx_2Time) + (standby_idleTime) + (tx_3Time) + (t_ifsTime) + (rx_3Time) + (post_processTime) + (devsleepTime)
-    sleepTime = AdvInterval - totalActiveTime
-    ConnectionInterval = 1
+
+    ConnectionInterval = 4
     ConnectionMeasuredI0dBm = (1.31E-3 + 916.6E-6 + 1.21E-3)/3
     ScannerMeasuredI = 4.36E-3
 
+    def AdvInt(self, newValue):
+        self.AdvInterval = newValue
+
     def AdvAvgI(self):
-        area = (self.devwkupCurrent * self.devwkupTime) + (self.standbyCurrent * self.standbyTime) + (self.idleCurrent * self.idleTime) + (self.tx_1Current * self.tx_1Time) + (self.t_ifsCurrent * self.t_ifsTime) + (self.rx_1Current * self.rx_1Time) + (self.standby_idleCurrent * self.standby_idleTime) + (self.tx_2Current * self.tx_2Time) + (self.t_ifsCurrent * self.t_ifsTime) + (self.rx_2Current * self.rx_2Time) + (self.standby_idleCurrent * self.standby_idleTime) + (self.tx_3Current * self.tx_3Time) + (self.t_ifsCurrent * self.t_ifsTime) + (self.rx_3Current * self.rx_3Time) + (self.post_processCurrent * self.post_processTime) + (self.devsleepCurrent * self.devsleepTime) + (self.sleepCurrent * self.sleepTime)
-        totalTime = self.devwkupTime + (self.standbyTime) + (self.idleTime) + (self.tx_1Time) + (self.t_ifsTime) + (self.rx_1Time) + (self.standby_idleTime) + (self.tx_2Time) + (self.t_ifsTime) + (self.rx_2Time) + (self.standby_idleTime) + (self.tx_3Time) + (self.t_ifsTime) + (self.rx_3Time) + (self.post_processTime) + (self.devsleepTime) + (self.sleepTime)
+        totalActiveTime = self.devwkupTime + (self.standbyTime) + (self.idleTime) + (self.tx_1Time) + (self.t_ifsTime) + (self.rx_1Time) + (self.standby_idleTime) + (self.tx_2Time) + (self.t_ifsTime) + (self.rx_2Time) + (self.standby_idleTime) + (self.tx_3Time) + (self.t_ifsTime) + (self.rx_3Time) + (self.post_processTime) + (self.devsleepTime)
+        sleepTime = self.AdvInterval - totalActiveTime
+        area = (self.devwkupCurrent * self.devwkupTime) + (self.standbyCurrent * self.standbyTime) + (self.idleCurrent * self.idleTime) + (self.tx_1Current * self.tx_1Time) + (self.t_ifsCurrent * self.t_ifsTime) + (self.rx_1Current * self.rx_1Time) + (self.standby_idleCurrent * self.standby_idleTime) + (self.tx_2Current * self.tx_2Time) + (self.t_ifsCurrent * self.t_ifsTime) + (self.rx_2Current * self.rx_2Time) + (self.standby_idleCurrent * self.standby_idleTime) + (self.tx_3Current * self.tx_3Time) + (self.t_ifsCurrent * self.t_ifsTime) + (self.rx_3Current * self.rx_3Time) + (self.post_processCurrent * self.post_processTime) + (self.devsleepCurrent * self.devsleepTime) + (self.sleepCurrent * sleepTime)
+        totalTime = self.devwkupTime + (self.standbyTime) + (self.idleTime) + (self.tx_1Time) + (self.t_ifsTime) + (self.rx_1Time) + (self.standby_idleTime) + (self.tx_2Time) + (self.t_ifsTime) + (self.rx_2Time) + (self.standby_idleTime) + (self.tx_3Time) + (self.t_ifsTime) + (self.rx_3Time) + (self.post_processTime) + (self.devsleepTime) + (sleepTime)
         return area / totalTime
 
     def ConnAvgI(self, powerlevel):
@@ -77,16 +81,6 @@ parts = {
     "B" : "EFR32BG22"
 }
 
-
-batterySize = input ("Type the Battery Size in mAh: ")
-batterySize = batterySize * 1E-3
-#printList(parts,"Choose which device do you want to estimate Power Consumption: \r")
-#Choice = menuOptions(parts,"Enter your choice:")
-AdvPercentage = float(input ("Percentage of the Duty Cycle in Advertisement mode: "))
-ScanPercentage = float(input ("Percentage of the Duty Cycle in Scanning mode: "))
-ConnPercentage = float(input ("Percentage of the Duty Cycle in Connection mode: "))
-
-
 emptySoc0dBm = BLEDevice()
 emptySoc8dBm = BLEDevice()
 emptySoc6dBm = BLEDevice()
@@ -94,9 +88,25 @@ emptySoc6dBm = BLEDevice()
 emptySoc8dBm.tx_1Current = 10E-3
 emptySoc6dBm.tx_1Current = 8.5E-3
 
+batterySize = input ("Type the Battery Size in mAh: ")
+batterySize = batterySize * 1E-3
+#printList(parts,"Choose which device do you want to estimate Power Consumption: \r")
+#Choice = menuOptions(parts,"Enter your choice:")
+AdvPercentage = float(input ("Percentage of the Duty Cycle in Advertisement mode: "))
+if AdvPercentage > 0:
+    emptySoc0dBm.AdvInt(float(input ("Please type the Advertisement Interval in seconds: ")))
+if AdvPercentage != 100:
+    ScanPercentage = float(input ("Percentage of the Duty Cycle in Scanning mode: "))
+    ConnPercentage = float(input ("Percentage of the Duty Cycle in Connection mode: "))
+else:
+    ScanPercentage = 0
+    ConnPercentage = 0
+
+
+
 totalAvgI = ((emptySoc0dBm.AdvAvgI() * AdvPercentage) + (emptySoc0dBm.ScanAvgI() * ScanPercentage) + (emptySoc0dBm.ConnAvgI(0) * ConnPercentage)) / 100
 print("Total Average Current is %.3e" % totalAvgI)
 
-batteryLife = float(batterySize / (totalAvgI * 8760) * 0.7)
+batteryLife = float(batterySize / (totalAvgI * 8760) * 0.6)
 
 print("Total Estimated Battery Life in Years is %f" % batteryLife)
