@@ -80,13 +80,14 @@ parts = {
     "A" : "EFR32BG21",
     "B" : "EFR32BG22"
 }
+BG22PowerLevel = {
+    "A" : "0dBm",
+    "B" : "6dBm",
+    "C" : "8dBm"
+}
 
 emptySoc0dBm = BLEDevice()
-emptySoc8dBm = BLEDevice()
-emptySoc6dBm = BLEDevice()
 
-emptySoc8dBm.tx_1Current = 10E-3
-emptySoc6dBm.tx_1Current = 8.5E-3
 
 batterySize = input ("Type the Battery Size in mAh: ")
 batterySize = batterySize * 1E-3
@@ -94,7 +95,17 @@ batterySize = batterySize * 1E-3
 #Choice = menuOptions(parts,"Enter your choice:")
 AdvPercentage = float(input ("Percentage of the Duty Cycle in Advertisement mode: "))
 if AdvPercentage > 0:
-    emptySoc0dBm.AdvInt(float(input ("Please type the Advertisement Interval in seconds: ")))
+    #emptySoc0dBm.AdvInt(float(input ("Please type the Advertisement Interval in seconds: ")))
+    emptySoc0dBm.AdvInterval = float(input ("Please type the Advertisement Interval in seconds: "))
+    printList(BG22PowerLevel,"Choose PA Power level: \r")
+    Choice = menuOptions(BG22PowerLevel,"Enter your choice:")
+    if Choice == '0dBm':
+        emptySoc0dBm.tx_1Current = 4.7E-3
+    if Choice == '6dBm':
+        emptySoc0dBm.tx_1Current = 8.5E-3
+    if Choice == '8dBm':
+        emptySoc0dBm.tx_1Current = 9.5E-3
+
 if AdvPercentage != 100:
     ScanPercentage = float(input ("Percentage of the Duty Cycle in Scanning mode: "))
     ConnPercentage = float(input ("Percentage of the Duty Cycle in Connection mode: "))
@@ -105,8 +116,8 @@ else:
 
 
 totalAvgI = ((emptySoc0dBm.AdvAvgI() * AdvPercentage) + (emptySoc0dBm.ScanAvgI() * ScanPercentage) + (emptySoc0dBm.ConnAvgI(0) * ConnPercentage)) / 100
-print("Total Average Current is %.3e" % totalAvgI)
+print("Total Average Current is %.3e A" % totalAvgI)
 
 batteryLife = float(batterySize / (totalAvgI * 8760) * 0.6)
 
-print("Total Estimated Battery Life in Years is %f" % batteryLife)
+print("Total Estimated Battery Life is %f years" % batteryLife)
