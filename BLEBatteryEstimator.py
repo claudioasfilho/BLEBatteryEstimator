@@ -86,6 +86,28 @@ def menuOptions(listOfOptions, choiceWrd):
 
     return optionSelected
 
+def optionCheckNumeric(Limit, HighorLow, choiceWrd, choiceAnswer):
+    result = None
+    while result is None:
+        val = input (choiceWrd)
+        #checks if comparison will be Higher or Lower
+        if HighorLow == 'H':
+            if val < Limit:
+                print choiceAnswer + " %d " % val
+                result = 1
+            else:
+                print "Choice not available \n\r"
+        if HighorLow == 'L':
+            if val > Limit:
+                print choiceAnswer + " %d " % val
+                result = 1
+            else:
+                print "Choice not available \n\r"
+        #else:
+            #print "Choice not available \n\r"
+
+    return val
+
 
 parts = {
     "A" : "EFR32BG21",
@@ -102,6 +124,9 @@ emptySoc0dBm = BLEDevice()
 
 batterySize = input ("Type the Battery Size in mAh: ")
 batterySize = batterySize * 1E-3
+batteryDrateS = optionCheckNumeric(60,"H","Please type the battery Discharge rate (40% default): ", "Discharge Rate Chosen (%%)")
+#batteryDrate = float(input ("Please type the battery Discharge rate (40% default): "))
+batteryDrate = 1 - (batteryDrateS)/100
 #printList(parts,"Choose which device do you want to estimate Power Consumption: \r")
 #Choice = menuOptions(parts,"Enter your choice:")
 AdvPercentage = float(input ("Percentage of the Duty Cycle in Advertisement mode: "))
@@ -134,7 +159,8 @@ else:
 totalAvgI = ((emptySoc0dBm.AdvAvgI() * AdvPercentage) + (emptySoc0dBm.ScanAvgI() * ScanPercentage) + (emptySoc0dBm.ConnAvgI(PALevel) * ConnPercentage)) / 100
 print("Total Average Current is %.3e A" % totalAvgI)
 
-batteryLife = float(batterySize / (totalAvgI * 8760) * 0.6)
+#batteryLife = float(batterySize / (totalAvgI * 8760) * 0.6)
+batteryLife = float(batterySize / (totalAvgI * 8760) * batteryDrate)
 
-print("Total Estimated Battery Life is %f years /n" % batteryLife)
-print("This calculation assumes a battery drate of 40%")
+print("Total Estimated Battery Life is %f years \n" % batteryLife)
+print("This calculation assumes a battery discharge rate of %d %%\n " % batteryDrateS)
