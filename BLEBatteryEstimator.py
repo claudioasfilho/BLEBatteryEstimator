@@ -125,7 +125,7 @@ emptySoc0dBm = BLEDevice()
 batterySize = input ("Type the Battery Size in mAh: ")
 batterySize = batterySize * 1E-3
 batteryDrateS = optionCheckNumeric(60,"H","Please type the battery Discharge rate (40% default): ", "Discharge Rate Chosen (%%)")
-#batteryDrate = float(input ("Please type the battery Discharge rate (40% default): "))
+#changes the value to be used in the calculation
 batteryDrate = 1 - (batteryDrateS)/100
 #printList(parts,"Choose which device do you want to estimate Power Consumption: \r")
 #Choice = menuOptions(parts,"Enter your choice:")
@@ -159,7 +159,7 @@ else:
 totalAvgI = ((emptySoc0dBm.AdvAvgI() * AdvPercentage) + (emptySoc0dBm.ScanAvgI() * ScanPercentage) + (emptySoc0dBm.ConnAvgI(PALevel) * ConnPercentage)) / 100
 print("Total Average Current is %.3e A" % totalAvgI)
 
-#batteryLife = float(batterySize / (totalAvgI * 8760) * 0.6)
+#Calculates the battery life in a year considerating the discharge rate
 batteryLife = float(batterySize / (totalAvgI * 8760) * batteryDrate)
 
 print("Total Estimated Battery Life is %f years \n" % batteryLife)
