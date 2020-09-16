@@ -30,10 +30,13 @@ class BLEDevice:
     devsleepCurrent = 0.8E-3
     sleepCurrent = 1.3E-6
     AdvInterval = 4
-
+    ConnectionTXDuration = 2.5E-3
     ConnectionInterval = 4
-    ConnectionMeasuredI0dBm = (1.31E-3 + 916.6E-6 + 1.21E-3)/3
-    ScannerMeasuredI = 4.36E-3
+    ConnectionMeasuredI0dBm = (1.18E-3 + 1.17E-3 + 1.22E-3)/3
+    ConnectionMeasuredI6dBm = (1.32E-3 + 1.17E-3 + 1.26E-3)/3
+    ConnectionMeasuredI8dBm = (1.32E-3 + 1.17E-3 + 1.26E-3)/3
+
+    ScannerMeasuredI = 2.2E-3
 
     def AdvInt(self, newValue):
         self.AdvInterval = newValue
@@ -47,9 +50,17 @@ class BLEDevice:
 
     def ConnAvgI(self, powerlevel):
         if powerlevel==0:
-            return self.ConnectionMeasuredI0dBm
-        else:
-            return self.ConnectionMeasuredI0dBm
+            connectionActiveCurrent = self.ConnectionMeasuredI0dBm
+        if powerlevel==6:
+            connectionActiveCurrent = self.ConnectionMeasuredI6dBm
+        if powerlevel==8:
+            connectionActiveCurrent = self.ConnectionMeasuredI8dBm
+
+        totalActiveTime = self.ConnectionTXDuration
+        sleepTime = self.ConnectionInterval - totalActiveTime
+        totalTime = self.ConnectionInterval
+        area = (totalActiveTime * connectionActiveCurrent) + (self.sleepCurrent * sleepTime)
+        return area / totalTime
 
     def ScanAvgI(self):
         return self.ScannerMeasuredI
@@ -81,9 +92,9 @@ parts = {
     "B" : "EFR32BG22"
 }
 BG22PowerLevel = {
-    "A" : "0dBm",
-    "B" : "6dBm",
-    "C" : "8dBm"
+    "0" : "0dBm",
+    "6" : "6dBm",
+    "8" : "8dBm"
 }
 
 emptySoc0dBm = BLEDevice()
@@ -101,10 +112,13 @@ if AdvPercentage > 0:
     Choice = menuOptions(BG22PowerLevel,"Enter your choice:")
     if Choice == '0dBm':
         emptySoc0dBm.tx_1Current = 4.7E-3
+        PALevel = 0
     if Choice == '6dBm':
         emptySoc0dBm.tx_1Current = 8.5E-3
+        PALevel = 6
     if Choice == '8dBm':
         emptySoc0dBm.tx_1Current = 9.5E-3
+        PALevel = 8
 
 if AdvPercentage != 100:
     ScanPercentage = float(input ("Percentage of the Duty Cycle in Scanning mode: "))
@@ -115,7 +129,7 @@ else:
 
 
 
-totalAvgI = ((emptySoc0dBm.AdvAvgI() * AdvPercentage) + (emptySoc0dBm.ScanAvgI() * ScanPercentage) + (emptySoc0dBm.ConnAvgI(0) * ConnPercentage)) / 100
+totalAvgI = ((emptySoc0dBm.AdvAvgI() * AdvPercentage) + (emptySoc0dBm.ScanAvgI() * ScanPercentage) + (emptySoc0dBm.ConnAvgI(PALevel) * ConnPercentage)) / 100
 print("Total Average Current is %.3e A" % totalAvgI)
 
 batteryLife = float(batterySize / (totalAvgI * 8760) * 0.6)
