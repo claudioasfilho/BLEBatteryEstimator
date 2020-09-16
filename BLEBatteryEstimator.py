@@ -123,6 +123,8 @@ if AdvPercentage > 0:
 if AdvPercentage != 100:
     ScanPercentage = float(input ("Percentage of the Duty Cycle in Scanning mode: "))
     ConnPercentage = float(input ("Percentage of the Duty Cycle in Connection mode: "))
+    emptySoc0dBm.ConnectionInterval = float(input ("Please type the Connection Interval in seconds: "))
+
 else:
     ScanPercentage = 0
     ConnPercentage = 0
@@ -134,4 +136,5 @@ print("Total Average Current is %.3e A" % totalAvgI)
 
 batteryLife = float(batterySize / (totalAvgI * 8760) * 0.6)
 
-print("Total Estimated Battery Life is %f years" % batteryLife)
+print("Total Estimated Battery Life is %f years /n" % batteryLife)
+print("This calculation assumes a battery drate of 40%")
